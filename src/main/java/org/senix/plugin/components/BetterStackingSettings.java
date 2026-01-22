@@ -43,8 +43,8 @@ public class BetterStackingSettings implements Component<EntityStore> {
     }
 
 
-    public StackingPolicy getPolicy(String target) {
-        return policies.computeIfAbsent(target.toUpperCase(), k -> new StackingPolicy());
+    public StackingPolicy getPolicy(String slot) {
+        return policies.computeIfAbsent(slot.toUpperCase(), k -> new StackingPolicy());
     }
 
     @Override

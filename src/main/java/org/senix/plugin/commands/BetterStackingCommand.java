@@ -22,14 +22,14 @@ import java.awt.*;
 
 public class BetterStackingCommand extends AbstractPlayerCommand {
 
-    private final RequiredArg<String> targetArg;
+    private final RequiredArg<String> slotArg;
     private final FlagArg fullModeFlag;
 
     public BetterStackingCommand() {
-        super("bstacking", "Better stacking");
+        super("stacking", "Better stacking");
         this.setPermissionGroup(GameMode.Adventure);
 
-        this.targetArg = withRequiredArg("target", "The slot to configure", ArgTypes.STRING)
+        this.slotArg = withRequiredArg("slot", "The slot to configure", ArgTypes.STRING)
                 .addValidator(Validators.nonNull())
                 .addValidator(Validators.nonEmptyString())
                 .suggest((sender, text, cursor, result) -> {
@@ -50,8 +50,8 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
             settings = new BetterStackingSettings();
         }
 
-        String target = targetArg.get(commandContext).toUpperCase();
-        StackingPolicy policy = settings.getPolicy(target);
+        String slot = slotArg.get(commandContext).toUpperCase();
+        StackingPolicy policy = settings.getPolicy(slot);
 
         boolean isFullFlagPresent = fullModeFlag.get(commandContext);
 
@@ -78,7 +78,7 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
             String modeText = policy.isPartialOnly() ? "Partial (New pickups)" : "Full (Moves stacks)";
 
             Message msg = Message.join(
-                    Message.raw("[Better Stacking - " + target + "]: ").color(Color.WHITE),
+                    Message.raw("[Better Stacking - " + slot + "]: ").color(Color.WHITE),
                     Message.raw(statusText).color(statusColor),
                     Message.raw(" | Mode: ").color(Color.GRAY),
                     Message.raw(modeText).color(Color.CYAN)
