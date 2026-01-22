@@ -1,0 +1,7 @@
+{
+  "Group": "org.senix",
+  "Name": "BetterStacking",
+  "Version": "1.0.0",
+  "Main": "org.senix.plugin.BetterStacking",
+  "IncludesAssetPack": true
+}
