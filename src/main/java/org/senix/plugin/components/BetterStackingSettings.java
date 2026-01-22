@@ -3,47 +3,59 @@ package org.senix.plugin.components;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.codec.builder.BuilderField;
+import com.hypixel.hytale.codec.codecs.map.MapCodec;
 import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.component.Component;
 
-public class BetterStackingSettings implements Component<EntityStore> {
+import java.util.HashMap;
+import java.util.Map;
 
+public class BetterStackingSettings implements Component<EntityStore> {
     public static ComponentType<EntityStore, BetterStackingSettings> TYPE;
 
-    public static final BuilderCodec<BetterStackingSettings> CODEC = BuilderCodec.builder(
-                    BetterStackingSettings.class,
-                    BetterStackingSettings::new
-            )
-            .addField(new KeyedCodec<>("Enabled", Codec.BOOLEAN),
-                    (data, value) -> data.enabled = value,
-                    data -> data.enabled)
-            .addField(new KeyedCodec<>("PartialStack", Codec.BOOLEAN),
-                    (data, value) -> data.partialStack = value,
-                    data -> data.partialStack)
-            .build();
+    private Map<String, StackingPolicy> policies = new HashMap<>();
 
-    private boolean enabled = true;
-    private boolean partialStack = true;
+    public BetterStackingSettings() {
+        policies.put("OFFHAND", new StackingPolicy());
+    }
 
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public static final BuilderCodec<BetterStackingSettings> CODEC;
 
-    public boolean isPartialStack() { return partialStack; }
-    public void setPartialStack(boolean partialStack) { this.partialStack = partialStack; }
+    static {
+        var builder = BuilderCodec.builder(BetterStackingSettings.class, BetterStackingSettings::new);
+        new BuilderField.FieldBuilder<>(
+                builder,
+                new KeyedCodec<>("Policies", new MapCodec<>(
+                        StackingPolicy.CODEC,
+                        HashMap::new,
+                        false
+                )),
+                (data, map, info) -> data.policies = map,
+                (data, info) -> data.policies,
+                null
+        )
+                .documentation("Map of slot types to stacking rules.")
+                .add();
+
+        CODEC = builder.build();
+    }
+
+
+    public StackingPolicy getPolicy(String target) {
+        return policies.computeIfAbsent(target.toUpperCase(), k -> new StackingPolicy());
+    }
 
     @Override
     public BetterStackingSettings clone() {
         BetterStackingSettings copy = new BetterStackingSettings();
-        copy.enabled = this.enabled;
-        copy.partialStack = this.partialStack;
+        this.policies.forEach((k, v) -> {
+            StackingPolicy policyCopy = new StackingPolicy();
+            policyCopy.setEnabled(v.isEnabled());
+            policyCopy.setPartialOnly(v.isPartialOnly());
+            copy.policies.put(k, policyCopy);
+        });
         return copy;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BetterStackingSettings that)) return false;
-        return enabled == that.enabled && partialStack == that.partialStack;
     }
 }

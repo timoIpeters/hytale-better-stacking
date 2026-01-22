@@ -10,6 +10,7 @@ import com.hypixel.hytale.server.core.inventory.transaction.ItemStackSlotTransac
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackTransaction;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.senix.plugin.components.BetterStackingSettings;
+import org.senix.plugin.components.StackingPolicy;
 
 public class InventoryChangeBetterStackingHandler {
 
@@ -21,7 +22,7 @@ public class InventoryChangeBetterStackingHandler {
         if (ref == null) return;
 
         BetterStackingSettings settings = ref.getStore().getComponent(ref, BetterStackingSettings.TYPE);
-        if (settings == null || !settings.isEnabled()) return;
+        if (settings == null) return;
 
         if (!(event.getTransaction() instanceof ItemStackTransaction itemStackTransaction) || !itemStackTransaction.succeeded()) return;
 
@@ -35,11 +36,16 @@ public class InventoryChangeBetterStackingHandler {
     private static void handleStacking(LivingEntityInventoryChangeEvent event, LivingEntity entity, ItemStackSlotTransaction slot, BetterStackingSettings settings) {
         ItemStack stackAfter = slot.getSlotAfter();
         ItemStack stackBefore = slot.getSlotBefore();
+
         if (!isOffhandCompatible(stackAfter)) return;
+
+        StackingPolicy offhandPolicy = settings.getPolicy("OFFHAND");
+
+        if (!offhandPolicy.isEnabled()) return;
 
         // adjust move amount based on stacking mode
         int amountToMove;
-        if (settings.isPartialStack()) {
+        if (offhandPolicy.isPartialOnly()) {
             amountToMove = calculateDelta(stackBefore, stackAfter);
         } else {
             amountToMove = stackAfter.getQuantity();
@@ -49,6 +55,8 @@ public class InventoryChangeBetterStackingHandler {
 
         Inventory inv = entity.getInventory();
         ItemContainer offhandSection = inv.getUtility();
+
+        // no need to continue if the change happened in the offhand section
         if (event.getItemContainer() == offhandSection) return;
 
         for (short i = 0; i < offhandSection.getCapacity(); i++) {
