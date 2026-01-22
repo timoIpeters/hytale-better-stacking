@@ -21,7 +21,7 @@ Use the `/stacking` command to manage your settings:
 - `/stacking <slot> --full`: Toggles stacking for the specified slot using the Full mode
 
 ## How to Use
-The mod can be downloaded from [Curseforge]() or [Nexusmods]().
+The mod can be downloaded from [Curseforge]() or [Nexusmods](https://www.nexusmods.com/hytale/mods/54).
 Just add the `.jar` to your server's mods folder (or directly install on your server using the Curseforge UI).
 
 After installing the mod, the first time you join the server, the settings for both slots (offhand and backpack) are initialized
