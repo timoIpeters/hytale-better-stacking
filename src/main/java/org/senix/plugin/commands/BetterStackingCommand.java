@@ -26,10 +26,10 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
     private final FlagArg fullModeFlag;
 
     public BetterStackingCommand() {
-        super("stacking", "Better stacking");
+        super("stacking", "Manage automatic item routing and stacking.");
         this.setPermissionGroup(GameMode.Adventure);
 
-        this.slotArg = withRequiredArg("slot", "The slot to configure", ArgTypes.STRING)
+        this.slotArg = withRequiredArg("slot", "The inventory slot to toggle or configure (e.g. offhand)", ArgTypes.STRING)
                 .addValidator(Validators.nonNull())
                 .addValidator(Validators.nonEmptyString())
                 .suggest((sender, text, cursor, result) -> {
@@ -38,9 +38,7 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
                 });
 
         this.fullModeFlag = withFlagArg("full",
-                "Toggles between the two stacking mode\n\n" +
-                        "Partial: Only stacks new pickups with the target slot\n" +
-                        "Full: Moves the entire stack from the inventory to the target slot");
+                "Enables 'Full' mode (moves entire stacks). If omitted, toggles the slot ON/OFF.");
     }
 
     @Override
