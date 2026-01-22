@@ -7,7 +7,6 @@ import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.FlagArg;
-import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
@@ -57,7 +56,9 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
         boolean isFullFlagPresent = fullModeFlag.get(commandContext);
 
         if (isFullFlagPresent) {
-            policy.setEnabled(true);
+            // if we use the full flag and previously used the partialOnly setting, this keeps enabled
+            // makes sure that using --full also uses a toggle feature when used repeatedly
+            policy.setEnabled(policy.isPartialOnly() || !policy.isEnabled());
             policy.setPartialOnly(false);
         } else {
             policy.setEnabled(!policy.isEnabled());

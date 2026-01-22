@@ -28,65 +28,75 @@ public class InventoryChangeBetterStackingHandler {
 
         for (ItemStackSlotTransaction slot : itemStackTransaction.getSlotTransactions()) {
             if (slot != null && slot.succeeded()) {
-                handleStacking(event, entity, slot, settings);
+                handleChainedStacking(event, entity, slot, settings);
             }
         }
     }
 
-    private static void handleStacking(LivingEntityInventoryChangeEvent event, LivingEntity entity, ItemStackSlotTransaction slot, BetterStackingSettings settings) {
-        ItemStack stackAfter = slot.getSlotAfter();
-        ItemStack stackBefore = slot.getSlotBefore();
-
-        if (!isOffhandCompatible(stackAfter)) return;
-
-        StackingPolicy offhandPolicy = settings.getPolicy("OFFHAND");
-
-        if (!offhandPolicy.isEnabled()) return;
-
-        // adjust move amount based on stacking mode
-        int amountToMove;
-        if (offhandPolicy.isPartialOnly()) {
-            amountToMove = calculateDelta(stackBefore, stackAfter);
-        } else {
-            amountToMove = stackAfter.getQuantity();
-        }
-
-        if (amountToMove <= 0) return;
+    private static void handleChainedStacking(LivingEntityInventoryChangeEvent event, LivingEntity entity, ItemStackSlotTransaction slot, BetterStackingSettings settings) {
+        ItemStack currentStack = slot.getSlotAfter();
+        if (currentStack == null || currentStack.isEmpty()) return;
 
         Inventory inv = entity.getInventory();
-        ItemContainer offhandSection = inv.getUtility();
 
-        // no need to continue if the change happened in the offhand section
-        if (event.getItemContainer() == offhandSection) return;
+        // try to add to offhand first
+        if (currentStack.getItem().getUtility().isUsable()) {
+            currentStack = processTransfer(event, slot, currentStack, settings.getPolicy("OFFHAND"), inv.getUtility());
+        }
 
-        for (short i = 0; i < offhandSection.getCapacity(); i++) {
-            ItemStack offhandStack = offhandSection.getItemStack(i);
+        // backpack gets the remainder (or everything if offhand is disabled)
+        if (currentStack != null && !currentStack.isEmpty()) {
+            processTransfer(event, slot, currentStack, settings.getPolicy("BACKPACK"), inv.getBackpack());
+        }
+    }
 
-            if (offhandStack != null && offhandStack.isStackableWith(stackAfter)) {
-                int max = offhandStack.getItem().getMaxStack();
-                int currentOffhand = offhandStack.getQuantity();
-                int canTransfer = Math.min(max - currentOffhand, amountToMove);
+    private static ItemStack processTransfer(LivingEntityInventoryChangeEvent event, ItemStackSlotTransaction slot, ItemStack stackToMove, StackingPolicy policy, ItemContainer targetContainer) {
+        if (!policy.isEnabled() || event.getItemContainer() == targetContainer) {
+            return stackToMove;
+        }
+
+        int amountToMove;
+        if (policy.isPartialOnly()) {
+            amountToMove = calculateDelta(slot.getSlotBefore(), stackToMove);
+        } else {
+            amountToMove = stackToMove.getQuantity();
+        }
+
+        if (amountToMove <= 0) return stackToMove;
+
+        for (short i = 0; i < targetContainer.getCapacity(); i++) {
+            ItemStack existingStack = targetContainer.getItemStack(i);
+
+            if (existingStack != null && existingStack.isStackableWith(stackToMove)) {
+                int max = existingStack.getItem().getMaxStack();
+                int current = existingStack.getQuantity();
+                int canTransfer = Math.min(max - current, amountToMove);
 
                 if (canTransfer > 0) {
-                    // update offhand
-                    offhandSection.setItemStackForSlot(i, offhandStack.withQuantity(currentOffhand + canTransfer));
+                    // Update target container
+                    targetContainer.setItemStackForSlot(i, existingStack.withQuantity(current + canTransfer));
 
-                    // calculate remaining for original slot
-                    int finalOriginalAmount = stackAfter.getQuantity() - canTransfer;
+                    // calculate remainder in the original slot to return it
+                    int remainingInSource = stackToMove.getQuantity() - canTransfer;
 
-                    if (finalOriginalAmount <= 0) {
+                    if (remainingInSource <= 0) {
                         event.getItemContainer().removeItemStackFromSlot(slot.getSlot());
+                        stackToMove = null;
                     } else {
-                        event.getItemContainer().setItemStackForSlot(slot.getSlot(), stackAfter.withQuantity(finalOriginalAmount));
+                        stackToMove = stackToMove.withQuantity(remainingInSource);
+                        event.getItemContainer().setItemStackForSlot(slot.getSlot(), stackToMove);
                     }
 
-                    inv.markChanged();
+                    event.getEntity().getInventory().markChanged();
                     amountToMove -= canTransfer;
-                    if (amountToMove <= 0) break;
+
+                    if (amountToMove <= 0 || stackToMove == null) break;
                 }
             }
         }
+        return stackToMove;
     }
+
 
     private static int calculateDelta(ItemStack before, ItemStack after) {
         if (before == null || !before.isStackableWith(after)) {
@@ -94,9 +104,4 @@ public class InventoryChangeBetterStackingHandler {
         }
         return after.getQuantity() - before.getQuantity();
     }
-
-    private static boolean isOffhandCompatible(ItemStack stack) {
-        return stack != null && stack.getItem().getUtility().isUsable();
-    }
-
 }
