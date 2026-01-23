@@ -1,4 +1,4 @@
-package org.senix.plugin.events;
+package org.senix.events;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.entity.LivingEntity;
@@ -9,8 +9,8 @@ import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackSlotTransaction;
 import com.hypixel.hytale.server.core.inventory.transaction.ItemStackTransaction;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import org.senix.plugin.components.BetterStackingSettings;
-import org.senix.plugin.components.StackingPolicy;
+import org.senix.components.BetterStackingSettings;
+import org.senix.components.StackingPolicy;
 
 public class InventoryChangeBetterStackingHandler {
 

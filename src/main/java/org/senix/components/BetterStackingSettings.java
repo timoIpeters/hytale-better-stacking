@@ -1,6 +1,5 @@
-package org.senix.plugin.components;
+package org.senix.components;
 
-import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.codec.builder.BuilderField;
@@ -8,6 +7,7 @@ import com.hypixel.hytale.codec.codecs.map.MapCodec;
 import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.component.Component;
+import org.senix.BetterStacking;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,10 @@ public class BetterStackingSettings implements Component<EntityStore> {
     private Map<String, StackingPolicy> policies = new HashMap<>();
 
     public BetterStackingSettings() {
-        policies.put("OFFHAND", new StackingPolicy());
+        Map<String, StackingPolicy> defaultPolicies = BetterStacking.getInstance().getConfigValues().getDefaultPolicies();
+        defaultPolicies.forEach((key, policy) -> {
+            this.policies.put(key, new StackingPolicy(policy.isEnabled(), policy.isPartialOnly()));
+        });
     }
 
     public static final BuilderCodec<BetterStackingSettings> CODEC;

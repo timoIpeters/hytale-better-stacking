@@ -1,4 +1,4 @@
-package org.senix.plugin.commands;
+package org.senix.commands;
 
 import com.hypixel.hytale.codec.validation.Validators;
 import com.hypixel.hytale.component.Ref;
@@ -15,8 +15,8 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
-import org.senix.plugin.components.BetterStackingSettings;
-import org.senix.plugin.components.StackingPolicy;
+import org.senix.components.BetterStackingSettings;
+import org.senix.components.StackingPolicy;
 
 import java.awt.*;
 
@@ -33,6 +33,7 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
                 .addValidator(Validators.nonNull())
                 .addValidator(Validators.nonEmptyString())
                 .suggest((sender, text, cursor, result) -> {
+                    result.suggest("settings");
                     result.suggest("offhand");
                     result.suggest("backpack");
                 });
@@ -49,6 +50,12 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
         }
 
         String slot = slotArg.get(commandContext).toUpperCase();
+
+        if (slot.equals("STATUS")) {
+            sendStatusOverview(playerRef, settings);
+            return;
+        }
+
         StackingPolicy policy = settings.getPolicy(slot);
 
         boolean isFullFlagPresent = fullModeFlag.get(commandContext);
@@ -82,6 +89,27 @@ public class BetterStackingCommand extends AbstractPlayerCommand {
                     Message.raw(modeText).color(Color.CYAN)
             );
             player.sendMessage(msg);
+        }
+    }
+
+    private void sendStatusOverview(PlayerRef playerRef, BetterStackingSettings settings) {
+        playerRef.sendMessage(Message.raw("=== Better Stacking Status ===").color(Color.yellow));
+
+        String[] slotsToShow = {"OFFHAND", "BACKPACK"};
+
+        for (String slotName : slotsToShow) {
+            StackingPolicy policy = settings.getPolicy(slotName);
+
+            String statusText = policy.isEnabled() ? "ON " : "OFF";
+            Color statusColor = policy.isEnabled() ? Color.GREEN : Color.RED;
+            String modeText = policy.isPartialOnly() ? "Partial" : "Full";
+
+            Message msg = Message.join(
+                    Message.raw("- " + slotName + ": ").color(Color.WHITE),
+                    Message.raw(statusText).color(statusColor),
+                    Message.raw(" [Mode: " + modeText + "]").color(Color.GRAY)
+            );
+            playerRef.sendMessage(msg);
         }
     }
 }
