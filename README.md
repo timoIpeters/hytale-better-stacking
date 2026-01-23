@@ -17,11 +17,35 @@ stacks in the offhand or backpack.
 ## Commands
 Use the `/stacking` command to manage your settings:
 
-- `/stacking <slot>` : Toggles stacking for the specified slot (`offhand` or `backpack`) using the Partial mode
+- `/stacking status`: Show the current status of your stacking configuration
+- `/stacking <slot>`: Toggles stacking for the specified slot (`offhand` or `backpack`) using the Partial mode
 - `/stacking <slot> --full`: Toggles stacking for the specified slot using the Full mode
 
+## Global Default Cofiguration
+
+If you want to adjust the default settings for all players on your server, you can adjust the `BetterStacking.json` config file.
+On the first server start it will be auto generated in the folder `[YourServer]/mods/org.senix_BetterStacking`. 
+The default configuration where both slots are enables and in partial mode looks like this:
+
+```json
+{
+"DefaultPolicies": {
+  "OFFHAND": {
+    "Enabled": true,
+    "PartialOnly": true
+  },
+  "BACKPACK": {
+    "Enabled": true,
+    "PartialOnly": true
+  }
+}
+}
+```
+
+*NOTE: When adjusting the BetterStacking.json config, changes are only applied to new players. If you want the changes to have an effect for all players, you will have to reset their player config (remove/adjust `[YourServer]/universe/players/<playerID>)*
+
 ## How to Use
-The mod can be downloaded from [Curseforge]() or [Nexusmods](https://www.nexusmods.com/hytale/mods/54).
+The mod can be downloaded from [Curseforge](https://www.curseforge.com/hytale/mods/better-stacking) or [Nexusmods](https://www.nexusmods.com/hytale/mods/54).
 Just add the `.jar` to your server's mods folder (or directly install on your server using the Curseforge UI).
 
 After installing the mod, the first time you join the server, the settings for both slots (offhand and backpack) are initialized
